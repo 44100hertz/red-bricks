@@ -16,14 +16,14 @@ typedef struct {
     double x, y;
 } Point;
 
+static SDL_Point point_to_sdl(Point p) {
+    return (SDL_Point){(int)p.x, (int)p.y};
+}
+
 typedef struct {
     Point pos;
     Point vel;
 } Moving;
-
-static SDL_Point point_to_sdl(Point p) {
-    return (SDL_Point){(int)p.x, (int)p.y};
-}
 
 static Point moving_moved(Moving m) {
     return (Point){m.pos.x + m.vel.x, m.pos.y + m.vel.y};

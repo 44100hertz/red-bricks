@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include "internal.h"
+#include "breakout.h"
 
 #define BRICKS_Y 4
 #define BRICKS_X 10
@@ -16,7 +17,7 @@ typedef struct {
     int stuck;
 } Game;
 
-SDL_Rect ball_rect(Game* g) {
+static SDL_Rect ball_rect(Game* g) {
     const int ball_r = 2;
     SDL_Rect rect = {
         (int)g->ball.pos.x - ball_r,
@@ -25,7 +26,7 @@ SDL_Rect ball_rect(Game* g) {
     };
     return rect;
 }
-SDL_Rect paddle_rect(Game* g, Point* paddle) {
+static SDL_Rect paddle_rect(Game* g, Point* paddle) {
     if(!paddle) paddle = &g->paddle.pos;
     SDL_Rect rect = {
         (int)paddle->x - g->paddle_size.x,
@@ -35,16 +36,16 @@ SDL_Rect paddle_rect(Game* g, Point* paddle) {
     };
     return rect;
 }
-int brick_pos(Point pos) {
+static int brick_pos(Point pos) {
     return (int)pos.x/SPACE_X + ((int)pos.y/SPACE_Y)*BRICKS_X;
 }
-int brick_on(Game* g, Point pos) {
+static int brick_on(Game* g, Point pos) {
     int brick = brick_pos(pos);
     if(brick < 0 || brick >= BRICKS) return 0;
     return g->bricks[brick];
 }
 
-void game_update(void* data)
+static void update(void* data)
 {
     Game* g = data;
     const Uint8* keys = SDL_GetKeyboardState(NULL);
@@ -106,7 +107,7 @@ void game_update(void* data)
     g->ball.vel.y += (1.0/32);
 }
 
-void game_draw(void* data, Rdr rdr)
+static void draw(void* data, Rdr rdr)
 {
     Game* g = data;
     for(int i=BRICKS; i-->0;) {
@@ -129,7 +130,7 @@ void game_draw(void* data, Rdr rdr)
     SDL_RenderFillRect(rdr, &paddle);
 }
 
-Scene game_new()
+Scene breakout_new()
 {
     Game* game = calloc(1, sizeof(Game));
     memset(game->bricks, 1, sizeof(game->bricks));
@@ -139,17 +140,8 @@ Scene game_new()
     game->stuck = 1;
 
     return (Scene){
-        .draw = game_draw,
-            .update = game_update,
+        .draw = draw,
+            .update = update,
             .data = game,
     };
-}
-
-
-#include <SDL2/SDL.h>
-
-int main()
-{
-    run_scene(game_new());
-    return 0;
 }
