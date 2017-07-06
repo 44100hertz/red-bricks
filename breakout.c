@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include "internal.h"
 #include "breakout.h"
+#include "sound.h"
 
 #define BRICKS_Y 4
 #define BRICKS_X 10
@@ -52,17 +53,21 @@ static void update(void* data)
 
     if (keys[SDL_SCANCODE_LEFT]) g->paddle.vel.x -= 1;
     if (keys[SDL_SCANCODE_RIGHT]) g->paddle.vel.x += 1;
-    if(g->paddle.pos.x < 0 || g->paddle.pos.x > GAME_W)
+    if(g->paddle.pos.x < 0 || g->paddle.pos.x > GAME_W) {
+        beep(24, 0.2);
         g->paddle.vel.x *= -3;
-    else
+    } else {
         g->paddle.vel.x *= (6.0/8);
+    }
 
     if(g->ball.pos.y > GAME_H) {
         g->stuck = 1;
+        beep_sweep(36, 0.5, 0.5);
     }
 
     if(g->stuck) {
         if (keys[SDL_SCANCODE_SPACE]) {
+            beep_sweep(36, 0.5, -0.5);
             g->stuck = 0;
             g->ball.vel = (Point){1.0/8 - rand()%2/4.0, -3};
         }
@@ -75,14 +80,15 @@ static void update(void* data)
     Point moved_ball = moving_moved(g->ball);
     Point moved_paddle = moving_moved(g->paddle);
 
-    if(moved_ball.x < 0 || moved_ball.x > GAME_W)
+    if(moved_ball.x <= 0 || moved_ball.x >= GAME_W) {
+        beep(24, 0.1);
         g->ball.vel.x *= -1;
-    if(moved_ball.y < 0)
-        g->ball.vel.y *= -1;
+    }
 
     int brick = brick_pos(moved_ball);
     int brick_state = brick_on(g, moved_ball);
     if(brick_state) {
+        beep(48, 0.05);
         Point moved_x = {g->ball.pos.x, moved_ball.y};
         Point moved_y = {moved_ball.x, g->ball.pos.y};
         if(!brick_on(g, moved_x)) g->ball.vel.x *= -1;
@@ -97,6 +103,7 @@ static void update(void* data)
            SDL_IntersectRectAndLine(
                &paddle, &p1.x, &p1.y, &p2.x, &p2.y))
         {
+            beep(36, 0.1);
             g->ball.vel.x = (moved_ball.x - moved_paddle.x) / 4;
             g->ball.vel.y = -3;
         }
@@ -110,6 +117,11 @@ static void update(void* data)
 static void draw(void* data, Rdr rdr)
 {
     Game* g = data;
+
+    SDL_SetRenderDrawColor(rdr, 20, 30, 40, 255);
+    const SDL_Rect borders = {0,0,GAME_W,GAME_H};
+    SDL_RenderFillRect(rdr, &borders);
+
     for(int i=BRICKS; i-->0;) {
         if(!g->bricks[i]) continue;
         SDL_Rect rect = {

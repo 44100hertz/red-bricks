@@ -1,4 +1,4 @@
 CC?="gcc"
 
 all:
-	$(CC) -g -o game *.c `sdl2-config --cflags --libs`
+	$(CC) -g -o game *.c -lm `sdl2-config --cflags --libs`
