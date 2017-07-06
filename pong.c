@@ -1,7 +1,6 @@
 #include <SDL2/SDL.h>
+#include "internal.h"
 
-#define GAME_W 240
-#define GAME_H 160
 #define BRICKS_Y 4
 #define BRICKS_X 10
 #define BRICKS (BRICKS_X * BRICKS_Y)
@@ -9,29 +8,10 @@
 #define SPACE_X (GAME_W / BRICKS_X)
 #define SPACE_Y (GAME_H / BRICKS_Y / 4)
 
-typedef SDL_Window* Win;
-typedef SDL_Renderer* Rdr;
-
-typedef struct {
-    double x, y;
-} Point;
-
-SDL_Point point_to_sdl(Point p) {
-    return (SDL_Point){p.x, p.y};}
-
-typedef struct {
-    Point pos;
-    Point vel;
-} Moving;
-
-Point moving_moved(Moving m) {
-    return (Point){
-        m.pos.x + m.vel.x, m.pos.y + m.vel.y};}
-
 typedef struct {
     int bricks[BRICKS];
     Moving paddle;
-    Point paddle_size;
+    SDL_Point paddle_size;
     Moving ball;
     int stuck;
 } Game;
@@ -39,29 +19,34 @@ typedef struct {
 SDL_Rect ball_rect(Game* g) {
     const int ball_r = 2;
     SDL_Rect rect = {
-        g->ball.pos.x - ball_r,
-        g->ball.pos.y - ball_r,
+        (int)g->ball.pos.x - ball_r,
+        (int)g->ball.pos.y - ball_r,
         ball_r*2, ball_r*2,
     };
-    return rect;}
+    return rect;
+}
 SDL_Rect paddle_rect(Game* g, Point* paddle) {
     if(!paddle) paddle = &g->paddle.pos;
     SDL_Rect rect = {
-        paddle->x - g->paddle_size.x,
-        paddle->y,
+        (int)paddle->x - g->paddle_size.x,
+        (int)paddle->y,
         g->paddle_size.x*2,
         g->paddle_size.y,
     };
-    return rect;}
+    return rect;
+}
 int brick_pos(Point pos) {
-    return (int)pos.x/SPACE_X + ((int)pos.y/SPACE_Y)*BRICKS_X;}
+    return (int)pos.x/SPACE_X + ((int)pos.y/SPACE_Y)*BRICKS_X;
+}
 int brick_on(Game* g, Point pos) {
     int brick = brick_pos(pos);
     if(brick < 0 || brick >= BRICKS) return 0;
-    return g->bricks[brick];}
+    return g->bricks[brick];
+}
 
-void game_update(Game* g)
+void game_update(void* data)
 {
+    Game* g = data;
     const Uint8* keys = SDL_GetKeyboardState(NULL);
 
     if (keys[SDL_SCANCODE_LEFT]) g->paddle.vel.x -= 1;
@@ -121,8 +106,9 @@ void game_update(Game* g)
     g->ball.vel.y += (1.0/32);
 }
 
-void game_draw(Game* g, Rdr rdr)
+void game_draw(void* data, Rdr rdr)
 {
+    Game* g = data;
     for(int i=BRICKS; i-->0;) {
         if(!g->bricks[i]) continue;
         SDL_Rect rect = {
@@ -143,45 +129,27 @@ void game_draw(Game* g, Rdr rdr)
     SDL_RenderFillRect(rdr, &paddle);
 }
 
-Game game_new()
+Scene game_new()
 {
-    Game game = {
-        .ball = {.vel = {1, 1}},
-        .paddle = {.pos = {GAME_W/2, GAME_H-20}},
-        .paddle_size = {10, 4},
-        .stuck = 1,
+    Game* game = calloc(1, sizeof(Game));
+    memset(game->bricks, 1, sizeof(game->bricks));
+    game->ball = (Moving){.vel = {1, 1}};
+    game->paddle = (Moving){.pos = {GAME_W/2, GAME_H-20}};
+    game->paddle_size = (SDL_Point){10, 4};
+    game->stuck = 1;
+
+    return (Scene){
+        .draw = game_draw,
+            .update = game_update,
+            .data = game,
     };
-    memset(game.bricks, 1, sizeof(game.bricks));
-    return game;
 }
 
 
+#include <SDL2/SDL.h>
+
 int main()
 {
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-    Win win = SDL_CreateWindow("hi", -1, -1, GAME_W*3, GAME_H*3, 0);
-    Rdr rdr = SDL_CreateRenderer(win, 0, SDL_RENDERER_PRESENTVSYNC);
-    SDL_RenderSetLogicalSize(rdr, GAME_W, GAME_H);
-
-    Game game = game_new();
-
-    SDL_Event e;
-    while (1) {
-        while (SDL_PollEvent(&e)) {
-            switch(e.type) {
-            case SDL_QUIT: goto quit;
-            }
-        }
-        SDL_SetRenderDrawColor(rdr, 0, 0, 0, 255);
-        SDL_RenderClear(rdr);
-
-        game_update(&game);
-        game_draw(&game, rdr);
-
-        SDL_RenderPresent(rdr);
-    }
-quit:
-    SDL_DestroyRenderer(rdr);
-
+    run_scene(game_new());
     return 0;
 }

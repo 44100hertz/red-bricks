@@ -1,2 +1,4 @@
+CC?="gcc"
+
 all:
-	cc -g -o game -lSDL2 -lepoxy *.c
+	$(CC) -g -o game *.c `sdl2-config --cflags --libs`
