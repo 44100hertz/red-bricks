@@ -62,7 +62,7 @@ static void update(void* data)
 
     if(g->ball.pos.y > GAME_H) {
         g->stuck = 1;
-        beep_sweep(36, 0.5, 0.5);
+        beep_sweep(36, 0.5, 0.1);
     }
 
     if(g->stuck) {
