@@ -69,7 +69,10 @@ static void update(void* data)
         if (keys[SDL_SCANCODE_SPACE]) {
             beep_sweep(36, 0.5, -0.5);
             g->stuck = 0;
-            g->ball.vel = (Point){1.0/8 - rand()%2/4.0, -3};
+            g->ball.vel = (Point){
+                .x = 1.0/8 - rand()%2/4.0 + g->paddle.vel.x/2.0,
+                .y = -3
+            };
         }
         g->paddle.pos = moving_moved(g->paddle);
         g->ball.pos = g->paddle.pos;
@@ -83,6 +86,7 @@ static void update(void* data)
     if(moved_ball.x <= 0 || moved_ball.x >= GAME_W) {
         beep(24, 0.1);
         g->ball.vel.x *= -1;
+        moved_ball = moving_moved(g->ball);
     }
 
     int brick = brick_pos(moved_ball);
@@ -94,6 +98,7 @@ static void update(void* data)
         if(!brick_on(g, moved_x)) g->ball.vel.x *= -1;
         if(!brick_on(g, moved_y)) g->ball.vel.y *= -1;
         g->bricks[brick] = 0;
+        moved_ball = moving_moved(g->ball);
     } else {
         SDL_Rect paddle = paddle_rect(g, &moved_paddle);
         paddle.h = 1;
@@ -106,6 +111,7 @@ static void update(void* data)
             beep(36, 0.1);
             g->ball.vel.x = (moved_ball.x - moved_paddle.x) / 4;
             g->ball.vel.y = -3;
+            moved_ball = moving_moved(g->ball);
         }
     }
 
