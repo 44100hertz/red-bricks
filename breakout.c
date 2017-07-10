@@ -46,7 +46,7 @@ static int brick_on(Game* g, Point pos) {
     return g->bricks[brick];
 }
 
-static void update(void* data)
+static int update(void* data)
 {
     Game* g = data;
     const Uint8* keys = SDL_GetKeyboardState(NULL);
@@ -61,8 +61,8 @@ static void update(void* data)
     }
 
     if(g->ball.pos.y > GAME_H) {
-        g->stuck = 1;
         beep_sweep(36, 0.5, 0.1);
+        return 0;
     }
 
     if(g->stuck) {
@@ -77,7 +77,7 @@ static void update(void* data)
         g->paddle.pos = moving_moved(g->paddle);
         g->ball.pos = g->paddle.pos;
         g->ball.pos.y -= 4;
-        return;
+        return 1;
     }
 
     Point moved_ball = moving_moved(g->ball);
@@ -118,6 +118,8 @@ static void update(void* data)
     g->paddle.pos = moved_paddle;
     g->ball.pos = moved_ball;
     g->ball.vel.y += (1.0/32);
+
+    return 1;
 }
 
 static void draw(void* data, Rdr rdr)
@@ -157,9 +159,10 @@ Scene breakout_new()
     game->paddle_size = (SDL_Point){10, 4};
     game->stuck = 1;
 
-    return (Scene){
+    Scene s = {
         .draw = draw,
-            .update = update,
-            .data = game,
+        .update = update,
+        .data = game,
     };
+    return s;
 }

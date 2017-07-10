@@ -16,6 +16,8 @@ void run_scene(Scene scene)
         audio_init();
     }
 
+    if(scene.new) scene.new(scene.data, rdr);
+
     SDL_Event e;
     while (1) {
         while (SDL_PollEvent(&e)) {
@@ -26,7 +28,7 @@ void run_scene(Scene scene)
         SDL_SetRenderDrawColor(rdr, 0, 0, 0, 255);
         SDL_RenderClear(rdr);
 
-        scene.update(scene.data);
+        if(!scene.update(scene.data)) goto quit;
         scene.draw(scene.data, rdr);
 
         SDL_RenderPresent(rdr);
@@ -38,4 +40,6 @@ quit:
         SDL_DestroyRenderer(rdr);
         SDL_Quit();
     }
+
+    if(scene.free) scene.free(scene.data);
 }
