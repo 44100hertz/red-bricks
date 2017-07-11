@@ -1,3 +1,5 @@
-void beep(double note, double len);
-void beep_sweep(double note, double len, double sweep);
-void audio_init();
+void beep(int pitch);
+void beep_sweep(int pitch, double sweep);
+
+void sound_toggle();
+void sound_init();

@@ -1,49 +1,113 @@
 #include <SDL2/SDL.h>
 #include <math.h>
+
 #include "sound.h"
 
-static int srate;
-static SDL_AudioDeviceID dev;
-static int ticks;
-static int beep_count;
-static int beep_len;
-static int beep_pitch[2];
+#define MEASURE 32
+
+static int srate,
+    samp_count = 0,
+    tick_count = 0,
+    tick_next = 0,
+    tick_len,
+    phase = 0,
+    phase_inc = 0,
+    mode,
+    interrupt = 0,
+    mute = 0;
+
 static double sweep;
 
-void beep(double note, double len) {
-    beep_sweep(note, len, 0);
+enum mode {
+    MODE_NOISE,
+    MODE_BEEP,
+};
+
+static const char noise[] = "u$a71i0Rkk*1LkQ46d2Dqtau4Pn1cU;tZ8G'#Xsn_};-&)<)n{z!^r5J|FISa@/6#P9uEDq^_ e$v=.#T*$48S_6y*jvd5.$fbyGBl(=))B;`PX7tve/K`E`'KYka#+c!AFCIhalq?*no|'!ul0BOp%pWxwT7%99FzvodYxX4$b?iA3qQV]uN7+HkBMA[/=n:#I4u^RY}o^Z$RHtJ''yX2]`UF#LUZ<+wZozHd5S_pXM:hw[p.6>kvs35$oxJh6&";
+
+void sound_toggle()
+{
+    mute = !mute;
 }
 
-void beep_sweep(double note, double len, double new_sweep) {
-    beep_count = len * srate * 2;
-    beep_len = beep_count;
-    double pitch = 440 * pow(2.0, (note-60)/12.0);
-    beep_pitch[0] = srate / pitch;
-    beep_pitch[1] = srate / pitch * (255.0/256);
+void nosound()
+{
+    phase_inc = 0;
+}
+
+void beep_sweep(int pitch, double new_sweep)
+{
+    phase_inc = srate / pow(2.0, (pitch-60)/12.0);
+    mode = MODE_BEEP;
+    sweep = new_sweep;
+    interrupt = 2;
+}
+
+void beep(int pitch)
+{
+    beep_sweep(pitch, 0);
+}
+
+static void drum(int depth, int new_sweep)
+{
+    mode = MODE_NOISE;
+    phase_inc = depth;
     sweep = new_sweep;
 }
 
-static void callback(void* userdata, Uint8* stream, int len)
+static void next_measure()
 {
-    static long count = 0;
+}
+
+static void tick()
+{
+    phase_inc -= phase_inc * sweep;
+    tick_next = samp_count + tick_len;
+
+    if(!interrupt) {
+        switch(tick_count % MEASURE) {
+        case 0: drum(10, 0.5); break;
+        case 1: break;
+        case 8: drum(100, 0); break;
+        case 20: drum(10, 0.5); break;
+        case 21: break;
+        case 24: drum(100, 0); break;
+        case MEASURE-1: next_measure(); // fallthrough
+        default: nosound();// play melody/bass
+        }
+    } else {
+        --interrupt;
+    }
+
+    tick_count++;
+}
+
+static void callback(void* data, Uint8* stream, int len)
+{
     Sint16* stream16 = (Sint16*)stream;
-    memset(stream16, 0, len);
+    if(mute) {
+        memset(stream16, 0, len);
+        return;
+    }
+
     for(int i=0; i<len/2;) {
         for(int c=0; c<2; ++c) {
-            if(beep_count) {
-                stream16[i] = count % beep_pitch[c] * 0xffff / beep_pitch[c];
-                beep_count--;
-            }
-            if(sweep && count%ticks == 0) {
-                beep_pitch[c] += beep_pitch[c] * sweep;
+            if(samp_count == tick_next) tick();
+            samp_count++;
+            if(mode == MODE_NOISE) {
+                Uint8 off_phase = (Uint8)(phase/0xff) + c*64;
+                stream16[i] = noise[off_phase] * 0xff - 0x7f;
+            } else {
+                Sint8 off_phase = (Sint8)(phase/0xffff) + c*64;
+                stream16[i] = (off_phase < 0) * 0x8000 - 0x4000;
             }
             i++;
         }
-        count++;
+        phase += phase_inc;
     }
 }
 
-void audio_init()
+void sound_init()
 {
     SDL_AudioSpec want = {
         .freq = 48000,
@@ -52,10 +116,9 @@ void audio_init()
         .callback = callback,
     };
     SDL_AudioSpec have = {0};
-    dev = SDL_OpenAudioDevice(
+    int dev = SDL_OpenAudioDevice(
         NULL, 0, &want, &have, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
     srate = have.freq;
-    ticks = srate / 12;
-
+    tick_len = srate / MEASURE * 2;
     SDL_PauseAudioDevice(dev, 0);
 }

@@ -13,7 +13,7 @@ void run_scene(Scene scene)
         win = SDL_CreateWindow("hi", -1, -1, GAME_W*3, GAME_H*3, 0);
         rdr = SDL_CreateRenderer(win, 0, SDL_RENDERER_PRESENTVSYNC);
         SDL_RenderSetLogicalSize(rdr, GAME_W, GAME_H);
-        audio_init();
+        sound_init();
     }
 
     if(scene.new) scene.new(scene.data, rdr);
@@ -23,6 +23,10 @@ void run_scene(Scene scene)
         while (SDL_PollEvent(&e)) {
             switch(e.type) {
             case SDL_QUIT: goto quit;
+            case SDL_KEYDOWN:
+                if(e.key.keysym.scancode == SDL_SCANCODE_M) {
+                    sound_toggle();
+                }
             }
         }
         SDL_SetRenderDrawColor(rdr, 0, 0, 0, 255);
