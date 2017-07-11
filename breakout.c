@@ -3,15 +3,16 @@
 #include "breakout.h"
 #include "sound.h"
 
-#define BRICKS_Y 4
 #define BRICKS_X 10
-#define BRICKS (BRICKS_X * BRICKS_Y)
 #define PAD 2
 #define SPACE_X (GAME_W / BRICKS_X)
-#define SPACE_Y (GAME_H / BRICKS_Y / 4)
+#define SPACE_Y (GAME_H / 12)
 
 typedef struct {
-    int bricks[BRICKS];
+    char* bricks;
+    int level;
+    int num_bricks;
+    int bricks_left;
     Moving paddle;
     SDL_Point paddle_size;
     Moving ball;
@@ -42,7 +43,7 @@ static int brick_pos(Point pos) {
 }
 static int brick_on(Game* g, Point pos) {
     int brick = brick_pos(pos);
-    if(brick < 0 || brick >= BRICKS) return 0;
+    if(brick < 0 || brick >= g->num_bricks) return 0;
     return g->bricks[brick];
 }
 
@@ -97,8 +98,9 @@ static int update(void* data)
         Point moved_y = {moved_ball.x, g->ball.pos.y};
         if(!brick_on(g, moved_x)) g->ball.vel.x *= -1;
         if(!brick_on(g, moved_y)) g->ball.vel.y *= -1;
-        g->bricks[brick] = 0;
         moved_ball = moving_moved(g->ball);
+        g->bricks[brick] = 0;
+        g->bricks_left--;
     } else {
         SDL_Rect paddle = paddle_rect(g, &moved_paddle);
         paddle.h = 1;
@@ -119,7 +121,12 @@ static int update(void* data)
     g->ball.pos = moved_ball;
     g->ball.vel.y += (1.0/32);
 
-    return 1;
+    if(g->bricks_left) {
+        return 1;
+    } else {
+        run_scene(breakout_new(g->level+1));
+        return 0;
+    }
 }
 
 static void draw(void* data, Rdr rdr)
@@ -130,7 +137,7 @@ static void draw(void* data, Rdr rdr)
     const SDL_Rect borders = {0,0,GAME_W,GAME_H};
     SDL_RenderFillRect(rdr, &borders);
 
-    for(int i=BRICKS; i-->0;) {
+    for(int i=g->num_bricks; i-->0;) {
         if(!g->bricks[i]) continue;
         SDL_Rect rect = {
             (i % BRICKS_X) * SPACE_X + PAD/2,
@@ -150,14 +157,19 @@ static void draw(void* data, Rdr rdr)
     SDL_RenderFillRect(rdr, &paddle);
 }
 
-Scene breakout_new()
+Scene breakout_new(int level)
 {
     Game* game = calloc(1, sizeof(Game));
-    memset(game->bricks, 1, sizeof(game->bricks));
+    game->num_bricks = level * 20 + 30;
+    game->bricks_left = game->num_bricks;
+    game->bricks = malloc(game->num_bricks);
+    memset(game->bricks, 1, game->num_bricks);
     game->ball = (Moving){.vel = {1, 1}};
     game->paddle = (Moving){.pos = {GAME_W/2, GAME_H-20}};
     game->paddle_size = (SDL_Point){10, 4};
     game->stuck = 1;
+
+    sound_level(level+1);
 
     Scene s = {
         .draw = draw,

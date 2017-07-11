@@ -14,6 +14,7 @@ static int srate,
     phase_inc = 0,
     mode,
     interrupt = 0,
+    level = 0,
     mute = 0;
 
 static double sweep;
@@ -28,6 +29,11 @@ static const char noise[] = "u$a71i0Rkk*1LkQ46d2Dqtau4Pn1cU;tZ8G'#Xsn_};-&)<)n{z
 void sound_toggle()
 {
     mute = !mute;
+}
+
+void sound_level(int new_level)
+{
+    level = new_level;
 }
 
 void nosound()
@@ -68,10 +74,10 @@ static void tick()
         switch(tick_count % MEASURE) {
         case 0: drum(10, 0.5); break;
         case 1: break;
-        case 8: drum(100, 0); break;
+        case 8: if(level) drum(400, 0); break;
         case 20: drum(10, 0.5); break;
         case 21: break;
-        case 24: drum(100, 0); break;
+        case 24: if(level) drum(400, 0); break;
         case MEASURE-1: next_measure(); // fallthrough
         default: nosound();// play melody/bass
         }
