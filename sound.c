@@ -5,16 +5,16 @@
 
 #define MEASURE 32
 
-static int srate,
-    samp_count = 0,
-    tick_count = 0,
-    tick_next = 0,
-    tick_len,
-    phase = 0,
-    phase_inc = 0,
-    mode,
-    interrupt = 0,
-    level = 0,
+static int srate,   // sample rate
+    samp_count = 0, // samples passed; used for ticking
+    tick_next  = 0, // at what sample count is next tick
+    tick_count = 0, // ticks elapsed; used for music
+    tick_len,       // samples until next tick
+    phase      = 0, // current wave phase (never is reset lol)
+    phase_inc  = 0, // amount to increase phase to get desired pitch
+    mode,           // type of sound to play
+    interrupt  = 0, // countdown to stop playing music
+    level      = 0, // gameplay level; sort of a track number
     mute = 0;
 
 static double sweep;
