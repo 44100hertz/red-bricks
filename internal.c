@@ -7,6 +7,8 @@ void run_scene(Scene scene)
     static Win win = NULL;
     static Rdr rdr;
 
+    static int pause = 0;
+
     int is_root = !win;
     if(is_root) {
         SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -26,13 +28,15 @@ void run_scene(Scene scene)
             case SDL_KEYDOWN:
                 if(e.key.keysym.scancode == SDL_SCANCODE_M) {
                     sound_toggle();
+                } else if(e.key.keysym.scancode == SDL_SCANCODE_P) {
+                    pause = !pause;
                 }
             }
         }
         SDL_SetRenderDrawColor(rdr, 0, 0, 0, 255);
         SDL_RenderClear(rdr);
 
-        if(!scene.update(scene.data)) goto quit;
+        if(!pause && !scene.update(scene.data)) goto quit;
         scene.draw(scene.data, rdr);
 
         SDL_RenderPresent(rdr);
