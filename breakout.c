@@ -52,6 +52,8 @@ static int update(void* data)
     Game* g = data;
     const Uint8* keys = SDL_GetKeyboardState(NULL);
 
+    g->ball.vel.y += (1.0/32);
+
     if (keys[SDL_SCANCODE_LEFT]) g->paddle.vel.x -= 1;
     if (keys[SDL_SCANCODE_RIGHT]) g->paddle.vel.x += 1;
     if(g->paddle.pos.x < 0 || g->paddle.pos.x > GAME_W) {
@@ -119,7 +121,6 @@ static int update(void* data)
 
     g->paddle.pos = moved_paddle;
     g->ball.pos = moved_ball;
-    g->ball.vel.y += (1.0/32);
 
     if(g->bricks_left) {
         return 1;
@@ -162,12 +163,13 @@ Scene breakout_new(int level)
     Game* game = calloc(1, sizeof(Game));
     game->num_bricks = level * 20 + 30;
     game->bricks_left = game->num_bricks;
-    game->bricks = malloc(game->num_bricks);
-    memset(game->bricks, 1, game->num_bricks);
     game->ball = (Moving){.vel = {1, 1}};
     game->paddle = (Moving){.pos = {GAME_W/2, GAME_H-20}};
     game->paddle_size = (SDL_Point){10, 4};
     game->stuck = 1;
+
+    game->bricks = malloc(game->num_bricks);
+    memset(game->bricks, 1, game->num_bricks);
 
     sound_level(level+1);
 
