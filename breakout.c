@@ -8,33 +8,33 @@
 #define SPACE_X (GAME_W / BRICKS_X)
 #define SPACE_Y (GAME_H / 12)
 
+static const SDL_Point paddle_size = {10, 4};
+
 typedef struct {
     char* bricks;
     int level;
     int num_bricks;
     int bricks_left;
     Moving paddle;
-    SDL_Point paddle_size;
     Moving ball;
     int stuck;
 } Game;
 
-static SDL_Rect ball_rect(Game* g) {
+static SDL_Rect ball_rect(Point pos) {
     const int ball_r = 2;
     SDL_Rect rect = {
-        (int)g->ball.pos.x - ball_r,
-        (int)g->ball.pos.y - ball_r,
+        (int)pos.x - ball_r,
+        (int)pos.y - ball_r,
         ball_r*2, ball_r*2,
     };
     return rect;
 }
-static SDL_Rect paddle_rect(Game* g, Point* paddle) {
-    if(!paddle) paddle = &g->paddle.pos;
+static SDL_Rect paddle_rect(Point pos) {
     SDL_Rect rect = {
-        (int)paddle->x - g->paddle_size.x,
-        (int)paddle->y,
-        g->paddle_size.x*2,
-        g->paddle_size.y,
+        (int)pos.x - paddle_size.x,
+        (int)pos.y,
+        paddle_size.x*2,
+        paddle_size.y,
     };
     return rect;
 }
@@ -104,8 +104,9 @@ static int update(void* data)
         g->bricks[brick] = 0;
         g->bricks_left--;
     } else {
-        SDL_Rect paddle = paddle_rect(g, &moved_paddle);
-        paddle.h = 1;
+        SDL_Rect paddle = paddle_rect(moved_paddle);
+        paddle.x--;
+        paddle.w++;
         SDL_Point p1 = point_to_sdl(g->ball.pos);
         SDL_Point p2 = point_to_sdl(moved_ball);
         if(g->ball.vel.y > 0 &&
@@ -130,13 +131,9 @@ static int update(void* data)
     }
 }
 
-static void draw(void* data, Rdr rdr)
+static void draw(void* data, Rdr rdr, double thru)
 {
     Game* g = data;
-
-    SDL_SetRenderDrawColor(rdr, 20, 30, 40, 255);
-    const SDL_Rect borders = {0,0,GAME_W,GAME_H};
-    SDL_RenderFillRect(rdr, &borders);
 
     for(int i=g->num_bricks; i-->0;) {
         if(!g->bricks[i]) continue;
@@ -152,9 +149,9 @@ static void draw(void* data, Rdr rdr)
 
     SDL_SetRenderDrawColor(rdr, 255, 255, 255, 255);
 
-    SDL_Rect ball = ball_rect(g);
+    SDL_Rect ball = ball_rect(moving_lerp(g->ball, thru));
     SDL_RenderFillRect(rdr, &ball);
-    SDL_Rect paddle = paddle_rect(g, 0);
+    SDL_Rect paddle = paddle_rect(moving_lerp(g->paddle, thru));
     SDL_RenderFillRect(rdr, &paddle);
 }
 
@@ -165,7 +162,6 @@ Scene breakout_new(int level)
     game->bricks_left = game->num_bricks;
     game->ball = (Moving){.vel = {1, 1}};
     game->paddle = (Moving){.pos = {GAME_W/2, GAME_H-20}};
-    game->paddle_size = (SDL_Point){10, 4};
     game->stuck = 1;
 
     game->bricks = malloc(game->num_bricks);

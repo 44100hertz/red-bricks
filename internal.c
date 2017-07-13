@@ -2,19 +2,25 @@
 #include "internal.h"
 #include "sound.h"
 
+static Win win = NULL;
+static Rdr rdr;
+
+static int pause = 0;
+static int tick_count = 1;
+static int draw_time = 16;
+static int start_time = 0;
+
+const static double tick_len = 1000/60.0;
+
 void run_scene(Scene scene)
 {
-    static Win win = NULL;
-    static Rdr rdr;
-
-    static int pause = 0;
-
     int is_root = !win;
     if(is_root) {
         SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
         win = SDL_CreateWindow("hi", -1, -1, GAME_W*3, GAME_H*3, 0);
         rdr = SDL_CreateRenderer(win, 0, SDL_RENDERER_PRESENTVSYNC);
         SDL_RenderSetLogicalSize(rdr, GAME_W, GAME_H);
+
         sound_init();
     }
 
@@ -33,13 +39,28 @@ void run_scene(Scene scene)
                 }
             }
         }
-        SDL_SetRenderDrawColor(rdr, 0, 0, 0, 255);
-        SDL_RenderClear(rdr);
-
         if(!pause && !scene.update(scene.data)) goto quit;
-        scene.draw(scene.data, rdr);
 
-        SDL_RenderPresent(rdr);
+        if(!start_time) start_time = SDL_GetTicks();
+        int next_tick = start_time + tick_count * tick_len;
+        int last_draw;
+
+        while((last_draw = SDL_GetTicks()) + draw_time < next_tick) {
+            double thru = 1.0 - (next_tick - last_draw) / tick_len;
+
+            SDL_SetRenderDrawColor(rdr, 20, 30, 40, 255);
+            SDL_RenderClear(rdr);
+            SDL_SetRenderDrawColor(rdr, 0, 0, 0, 255);
+            const SDL_Rect borders = {0,0,GAME_W,GAME_H};
+            SDL_RenderFillRect(rdr, &borders);
+            scene.draw(scene.data, rdr, thru);
+
+            SDL_RenderPresent(rdr);
+
+            draw_time = SDL_GetTicks() - last_draw;
+        }
+
+        tick_count++;
     }
 quit:
 

@@ -10,11 +10,11 @@ typedef struct {
     int time;
 } Menu;
 
-static void draw(void* data, Rdr rdr)
+static void draw(void* data, Rdr rdr, double thru)
 {
     Menu* menu = data;
-    int xoff = sin(menu->time % 256 / 128.0 * 3.141592) * 16;
-    int yoff = cos(menu->time % 256 / 128.0 * 3.141592) * 16;
+    int xoff = sin((menu->time + thru) / 128.0 * 3.141592) * 16;
+    int yoff = cos((menu->time + thru) / 128.0 * 3.141592) * 16;
     SDL_Rect draw_to = {xoff, yoff, GAME_W, GAME_H};
     SDL_RenderCopy(rdr, menu->bg, NULL, &draw_to);
 }
