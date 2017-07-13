@@ -26,32 +26,17 @@ enum mode {
 
 static const char noise[] = "u$a71i0Rkk*1LkQ46d2Dqtau4Pn1cU;tZ8G'#Xsn_};-&)<)n{z!^r5J|FISa@/6#P9uEDq^_ e$v=.#T*$48S_6y*jvd5.$fbyGBl(=))B;`PX7tve/K`E`'KYka#+c!AFCIhalq?*no|'!ul0BOp%pWxwT7%99FzvodYxX4$b?iA3qQV]uN7+HkBMA[/=n:#I4u^RY}o^Z$RHtJ''yX2]`UF#LUZ<+wZozHd5S_pXM:hw[p.6>kvs35$oxJh6&";
 
-void sound_toggle()
-{
-    mute = !mute;
-}
+void sound_toggle() { mute = !mute; }
+void sound_level(int new_level) { level = new_level; }
+void nosound() { phase_inc = 0; }
 
-void sound_level(int new_level)
-{
-    level = new_level;
-}
-
-void nosound()
-{
-    phase_inc = 0;
-}
-
+void beep(int pitch) { beep_sweep(pitch, 0); }
 void beep_sweep(int pitch, double new_sweep)
 {
     phase_inc = srate / pow(2.0, (pitch-60)/12.0);
     mode = MODE_BEEP;
     sweep = new_sweep;
     interrupt = 2;
-}
-
-void beep(int pitch)
-{
-    beep_sweep(pitch, 0);
 }
 
 static void drum(int depth, int new_sweep)
@@ -61,10 +46,6 @@ static void drum(int depth, int new_sweep)
     sweep = new_sweep;
 }
 
-static void next_measure()
-{
-}
-
 static void tick()
 {
     phase_inc -= phase_inc * sweep;
@@ -72,13 +53,10 @@ static void tick()
 
     if(!interrupt) {
         switch(tick_count % MEASURE) {
-        case 0: drum(10, 0.5); break;
-        case 1: break;
-        case 8: if(level) drum(400, 0); break;
-        case 20: drum(10, 0.5); break;
-        case 21: break;
-        case 24: if(level) drum(400, 0); break;
-        case MEASURE-1: next_measure(); // fallthrough
+        case 0: if(level) drum(10, 0.5); break;
+        case 8: drum(400, 0); break;
+        case 20: if(level) drum(10, 0.5); break;
+        case 24: drum(400, 0); break;
         default: nosound();// play melody/bass
         }
     } else {
