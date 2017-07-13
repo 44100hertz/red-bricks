@@ -2,7 +2,7 @@
 #include "internal.h"
 #include "menu.h"
 
-int main()
+int main(int argc, char** argv)
 {
     run_scene(menu_new());
     return 0;
