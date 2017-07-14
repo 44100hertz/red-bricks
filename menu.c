@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <math.h>
 
+#include "input.h"
 #include "internal.h"
 #include "sound.h"
 #include "breakout.h"
@@ -18,7 +19,7 @@ static void draw(void* data, Rdr rdr, double thru)
     SDL_Rect draw_to = {xoff, yoff, GAME_W, GAME_H};
     SDL_RenderCopy(rdr, menu->bg, NULL, &draw_to);
 }
-static int update(void* data)
+static int update(Input input, void* data)
 {
     Menu* menu = data;
     const Uint8* keys = SDL_GetKeyboardState(NULL);

@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include "input.h"
 #include "internal.h"
 #include "breakout.h"
 #include "sound.h"
@@ -47,15 +48,14 @@ static int brick_on(Game* g, Point pos) {
     return g->bricks[brick];
 }
 
-static int update(void* data)
+static int update(Input input, void* data)
 {
     Game* g = data;
-    const Uint8* keys = SDL_GetKeyboardState(NULL);
 
     g->ball.vel.y += (1.0/32);
 
-    if (keys[SDL_SCANCODE_LEFT]) g->paddle.vel.x -= 1;
-    if (keys[SDL_SCANCODE_RIGHT]) g->paddle.vel.x += 1;
+    if (input.keys[SDL_SCANCODE_LEFT]) g->paddle.vel.x -= 1;
+    if (input.keys[SDL_SCANCODE_RIGHT]) g->paddle.vel.x += 1;
     if(g->paddle.pos.x < 0 || g->paddle.pos.x > GAME_W) {
         beep(24);
         g->paddle.vel.x *= -3;
@@ -69,11 +69,12 @@ static int update(void* data)
     }
 
     if(g->stuck) {
-        if (keys[SDL_SCANCODE_SPACE]) {
+        g->ball.vel = (Point){0.0, 0.0};
+        if (input.keys[SDL_SCANCODE_SPACE]==1) {
             beep_sweep(36, -0.5);
             g->stuck = 0;
             g->ball.vel = (Point){
-                .x = 1.0/8 - rand()%2/4.0 + g->paddle.vel.x/2.0,
+                .x = 1/4.0 - rand()%2/2.0 + g->paddle.vel.x/2.0,
                 .y = -3
             };
         }

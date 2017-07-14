@@ -3,13 +3,16 @@
 #define GAME_W 240
 #define GAME_H 160
 
+// #include <SDL2/SDL.h>
+// #include "Input.h"
+
 typedef SDL_Window* Win;
 typedef SDL_Renderer* Rdr;
 
 typedef struct {
     void (*new)(void* data, Rdr rdr);
     void (*draw)(void* data, Rdr rdr, double thru);
-    int (*update)(void* data);
+    int (*update)(Input input, void* data);
     void (*free)(void* data);
     void* data;
 } Scene;

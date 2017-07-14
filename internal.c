@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include "input.h"
 #include "internal.h"
 #include "sound.h"
 
@@ -12,12 +13,33 @@ static int start_time = 0;
 
 const static double tick_len = 1000/60.0;
 
+static int hotkey(SDL_Event e)
+{
+    switch(e.type) {
+    case SDL_KEYDOWN:
+        switch (e.key.keysym.scancode) {
+        case SDL_SCANCODE_M:
+            sound_toggle();
+            return 1;
+        case SDL_SCANCODE_P:
+            pause = !pause;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void pause_toggle() { pause = !pause; }
+
 void run_scene(Scene scene)
 {
     int is_root = !win;
     if(is_root) {
         SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-        win = SDL_CreateWindow("hi", -1, -1, GAME_W*3, GAME_H*3, 0);
+        win = SDL_CreateWindow("hi", -1, -1, GAME_W*3, GAME_H*3,
+                               SDL_WINDOW_OPENGL |
+                               SDL_WINDOW_SHOWN |
+                               SDL_WINDOW_RESIZABLE);
         rdr = SDL_CreateRenderer(win, 0, SDL_RENDERER_PRESENTVSYNC);
         SDL_RenderSetLogicalSize(rdr, GAME_W, GAME_H);
 
