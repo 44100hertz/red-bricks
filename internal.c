@@ -51,24 +51,20 @@ void run_scene(Scene scene)
     SDL_Event e;
     while (1) {
         while (SDL_PollEvent(&e)) {
+            if(hotkey(e)) continue;
             switch(e.type) {
             case SDL_QUIT: goto quit;
-            case SDL_KEYDOWN:
-                if(e.key.keysym.scancode == SDL_SCANCODE_M) {
-                    sound_toggle();
-                } else if(e.key.keysym.scancode == SDL_SCANCODE_P) {
-                    pause = !pause;
-                }
+            default: input_event(e);
             }
         }
-        if(!pause && !scene.update(scene.data)) goto quit;
+        if(!pause && !scene.update(input_update(), scene.data))
+            goto quit;
 
         if(!start_time) start_time = SDL_GetTicks();
-        int next_tick = start_time + tick_count * tick_len;
+        int next_tick = start_time + tick_count*tick_len;
         int last_draw;
-
-        while((last_draw = SDL_GetTicks()) + draw_time < next_tick) {
-            double thru = 1.0 - (next_tick - last_draw) / tick_len;
+        while((last_draw = SDL_GetTicks()) < next_tick) {
+            double thru = 1.0 + (last_draw - next_tick)/tick_len;
 
             SDL_SetRenderDrawColor(rdr, 20, 30, 40, 255);
             SDL_RenderClear(rdr);
@@ -78,10 +74,7 @@ void run_scene(Scene scene)
             scene.draw(scene.data, rdr, thru);
 
             SDL_RenderPresent(rdr);
-
-            draw_time = SDL_GetTicks() - last_draw;
         }
-
         tick_count++;
     }
 quit:
