@@ -64,7 +64,7 @@ void run_scene(Scene scene)
         int next_tick = start_time + tick_count*tick_len;
         int last_draw;
         while((last_draw = SDL_GetTicks()) < next_tick) {
-            double thru = 1.0 + (last_draw - next_tick)/tick_len;
+            double thru = 0.5 + (last_draw - next_tick)/tick_len;
 
             SDL_SetRenderDrawColor(rdr, 20, 30, 40, 255);
             SDL_RenderClear(rdr);

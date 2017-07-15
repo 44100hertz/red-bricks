@@ -69,7 +69,11 @@ static int update(Input input, void* data)
     }
 
     if(g->stuck) {
-        g->ball.vel = (Point){0.0, 0.0};
+        g->ball.pos.x = g->paddle.pos.x;
+        g->ball.pos.y = g->paddle.pos.y - 4;
+        g->ball.vel = g->paddle.vel;
+        g->paddle.pos = moving_moved(g->paddle);
+
         if (input.keys[SDL_SCANCODE_SPACE]==1) {
             beep_sweep(36, -0.5);
             g->stuck = 0;
@@ -78,9 +82,6 @@ static int update(Input input, void* data)
                 .y = -3
             };
         }
-        g->paddle.pos = moving_moved(g->paddle);
-        g->ball.pos = g->paddle.pos;
-        g->ball.pos.y -= 4;
         return 1;
     }
 
