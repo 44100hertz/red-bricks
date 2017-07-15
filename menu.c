@@ -1,7 +1,6 @@
 #include <SDL2/SDL.h>
 #include <math.h>
 
-#include "input.h"
 #include "internal.h"
 #include "sound.h"
 #include "breakout.h"

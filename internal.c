@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-#include "input.h"
 #include "internal.h"
 #include "sound.h"
 
@@ -12,6 +11,28 @@ static int draw_time = 16;
 static int start_time = 0;
 
 const static double tick_len = 1000/60.0;
+
+static Input input = {0};
+
+static void input_event(SDL_Event e) {
+    switch(e.type) {
+    case SDL_KEYDOWN:
+        input.keys[e.key.keysym.scancode] = 1;
+        break;
+    case SDL_KEYUP:
+        input.keys[e.key.keysym.scancode] = 0;
+        break;
+    }
+}
+
+static Input input_update()
+{
+    Input input_copy = input;
+    for(int i=0; i<SDL_NUM_SCANCODES; ++i) {
+        if (input.keys[i]) input.keys[i]++;
+    }
+    return input_copy;
+}
 
 static int hotkey(SDL_Event e)
 {

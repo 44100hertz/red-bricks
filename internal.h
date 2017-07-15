@@ -10,6 +10,10 @@ typedef SDL_Window* Win;
 typedef SDL_Renderer* Rdr;
 
 typedef struct {
+    char keys[SDL_NUM_SCANCODES];
+} Input;
+
+typedef struct {
     void (*new)(void* data, Rdr rdr);
     void (*draw)(void* data, Rdr rdr, double thru);
     int (*update)(Input input, void* data);

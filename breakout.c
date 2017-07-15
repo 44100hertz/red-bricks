@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-#include "input.h"
 #include "internal.h"
 #include "breakout.h"
 #include "sound.h"
