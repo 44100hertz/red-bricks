@@ -12,11 +12,11 @@ static const SDL_Point paddle_size = {10, 4};
 
 typedef struct {
     char* bricks;
+    Moving paddle;
+    Moving ball;
     int level;
     int num_bricks;
     int bricks_left;
-    Moving paddle;
-    Moving ball;
     int stuck;
 } Game;
 
@@ -39,7 +39,7 @@ static SDL_Rect paddle_rect(Point pos) {
     return rect;
 }
 static int brick_pos(Point pos) {
-    return (int)pos.x/SPACE_X + ((int)pos.y/SPACE_Y)*BRICKS_X;
+    return (int)pos.x/SPACE_X + (int)(pos.y/SPACE_Y)*BRICKS_X;
 }
 static int brick_on(Game* g, Point pos) {
     int brick = brick_pos(pos);
