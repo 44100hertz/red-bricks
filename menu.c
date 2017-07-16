@@ -24,6 +24,7 @@ static int update(Input input, void* data)
     const Uint8* keys = SDL_GetKeyboardState(NULL);
     if(keys[SDL_SCANCODE_SPACE]) {
         run_scene(breakout_new(0));
+        flash(40);
         sound_level(0);
     } else if (keys[SDL_SCANCODE_Q]) {
         return 0;
@@ -36,8 +37,9 @@ static int update(Input input, void* data)
 static void new(void* data, Rdr rdr)
 {
     Menu* menu = data;
-    menu->bg = SDL_CreateTextureFromSurface(
-        rdr, SDL_LoadBMP("redbricks.bmp"));
+    SDL_Surface* s = SDL_LoadBMP("redbricks.bmp");
+    SDL_SetColorKey(s, SDL_TRUE, 0);
+    menu->bg = SDL_CreateTextureFromSurface(rdr, s);
 }
 
 Scene menu_new()
@@ -46,7 +48,7 @@ Scene menu_new()
         .new = new,
         .draw = draw,
         .update = update,
-        .data = malloc(sizeof(Menu)),
+        .data = calloc(1, sizeof(Menu)),
     };
     return s;
 }

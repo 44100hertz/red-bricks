@@ -41,4 +41,5 @@ static Point moving_lerp(Moving m, double thru) {
     return (Point){m.pos.x + m.vel.x * thru, m.pos.y + m.vel.y * thru};
 }
 
+void flash(int time);
 void run_scene(Scene scene);
